@@ -1,26 +1,70 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import axios from 'axios';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+interface OllamaResponse {
+	model: string;
+	creates_at: string;
+	response: string;
+	done: boolean;
+}
+
+async function callOllamaAPI(input: string): Promise<string> {
+	try {
+		console.log('Sending request to Ollama API with input: ', input);
+		const response = await axios.post<OllamaResponse>('http://127.0.0.1:11434/api/generate', {
+			model: 'stable-code',
+			prompt: input,
+			stream: false
+		});
+
+		console.log('Raw API response: ', response.data);
+		
+		if (response.data.response) {
+			return response.data.response;
+		} else {
+			const responseStr = JSON.stringify(response.data, null, 2);
+			console.log('Fallback response: ', responseStr);
+			return `Unable to parse response. Raw data: ${responseStr}`;
+		}
+	} catch (error: any) {
+		console.log('Error calling Ollama API: ', error);
+		vscode.window.showErrorMessage('Error communicating with ollama model' + error.message);
+		return '';
+	}
+}
+
 export function activate(context: vscode.ExtensionContext) {
+	let disposable = vscode.commands.registerCommand('ollot.ollamaChat', async () => {
+		try {
+			const input = await vscode.window.showInputBox({
+				prompt: 'Enter your query',
+				placeHolder: 'Type your question here...',
+			});
+	
+			if (input) {
+				const outputChannel = vscode.window.createOutputChannel('Ollama Chat');
+				outputChannel.clear();
+				outputChannel.appendLine('Processing your request...');
+				outputChannel.show(true);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "ollot" is now active!');
+				const result = await callOllamaAPI(input);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('ollot.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Ollot!');
+				outputChannel.clear();
+				if (result) {
+					outputChannel.appendLine('Query: ' + input);
+					outputChannel.appendLine('\nResponse: ');
+					outputChannel.appendLine(result);
+				} else {
+					outputChannel.appendLine('No response received from the model.');
+				}
+			}
+		} catch (error: any) {
+			console.error('Error in command execution:', error);
+            vscode.window.showErrorMessage('Error executing command: ' + error.message);
+		}
 	});
 
 	context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
