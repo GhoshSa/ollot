@@ -1,16 +1,10 @@
 import axios from "axios";
-import { StatusBarService } from "../functions/statusbar";
-
-const OLLAMA_API_URL = 'http://127.0.0.1:11434/api/generate';
-const MODEL_NAME = 'stable-code';
+import { MODEL_NAME, OLLAMA_API_URL, OLLAMA_AVAILABILITY } from "../constants/constant";
 
 export class OllamaService {
     private static instance: OllamaService | undefined;
-    private statusBarService: StatusBarService;
 
-    private constructor() {
-        this.statusBarService = StatusBarService.getInstance();
-    }
+    private constructor() {}
 
     public static getInstance(): OllamaService {
         if (!OllamaService.instance) {
@@ -21,7 +15,7 @@ export class OllamaService {
 
     async checkAvailability(): Promise<boolean> {
         try {
-            const response = await axios.get('http://127.0.0.1:11434/api/tags', {
+            const response = await axios.get(OLLAMA_AVAILABILITY, {
                 timeout: 2000
             });
             return response.status === 200;
@@ -30,77 +24,47 @@ export class OllamaService {
         }
     }
 
-    async* streamResponse(input: string): AsyncGenerator<string, void, unknown> {
-        if (!input.trim()) {
-            throw new Error("No input provided");
-        }
-
-        try {
-            const response = await axios.post(OLLAMA_API_URL, {
+    public async* streamResponse(input: string): AsyncGenerator<string> {
+        const response = await fetch(OLLAMA_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
                 model: MODEL_NAME,
                 prompt: input,
                 stream: true
-            }, {
-                responseType: 'stream'
-            });
+            })
+        });
 
-            const stream = response.data;
-            let buffer = '';
+        if (!response.ok || !response.body) {
+            throw new Error('Failed to get response from Ollama.');
+        }
 
-            for await (const chunk of stream) {
-                buffer += chunk.toString();
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
 
-                let newlineIndex;
-                while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-                    const line = buffer.substring(0, newlineIndex).trim();
-                    buffer = buffer.substring(newlineIndex + 1);
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) { break; }
 
-                    if (line) {
-                        try {
-                            const jsonData = JSON.parse(line);
-                            if (jsonData.response) {
-                                yield jsonData.response;
-                            } else {
-                                try {
-                                    const finalJson = JSON.parse(buffer);
-                                    if (!finalJson.response) {
-                                        return;
-                                    }
-                                } catch (finalJsonError) {
-                                    if (stream.readableEnded) {
-                                        return;
-                                    }
-                                    console.debug('Remaining buffer is not a complete JSON object');
-                                }
-                            }
-                        } catch (jsonError) {
-                            console.error('Error parsing JSON:', jsonError, line);
-                        }
-                    }
-                }
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(line => line.trim());
 
-                if (stream.readableEnded && buffer.trim() !== "") {
+                for (const line of lines) {
                     try {
-                        const finalJson = JSON.parse(buffer);
-                        if (!finalJson.response) {
-                            return;
+                        const jsonResponse = JSON.parse(line);
+                        if (jsonResponse.response) {
+                            yield jsonResponse.response;
                         }
-                    } catch (finalJsonError) {
-                        console.debug("Buffer has some content but is not valid json and stream is ended:", finalJsonError, buffer);
+                    } catch (e) {
+                        console.error('Error parsing JSON:', e);
                     }
                 }
             }
-        } catch (error: any) {
-            if (axios.isAxiosError(error)) {
-                if (error.code === 'ECONNREFUSED') {
-                    throw new Error('Could not connect to Ollama. Make sure it is running.');
-                } else if (error.response) {
-                    throw new Error(`API Error (${error.response.status}): ${error.response.data?.error || error.message}`);
-                } else if (error.request) {
-                    throw new Error('No response received from Ollama');
-                }
-            }
-            throw error;
+        } finally {
+            reader.releaseLock();
         }
     }
 }

@@ -1,51 +1,31 @@
 import * as vscode from 'vscode';
 import { StatusBarService } from './functions/statusbar';
 import { OllamaService } from './ollama/ollama';
+import { ChatViewProvider } from './functions/chatViewProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
 	const statusBarService = StatusBarService.getInstance();
 	statusBarService.initialize(context);
 	statusBarService.setReady();
 
-	const disposable = vscode.commands.registerCommand('ollot.ollamaChat', async () => {
-		const ollamaService = OllamaService.getInstance();
-		const outputChannel = vscode.window.createOutputChannel('Ollama Chat');
-		try {
-			if (!await ollamaService.checkAvailability()) {
-				throw new Error('Ollama service is not available. Please make sure it is running');
+	const ollamaService = OllamaService.getInstance();
+	const chatViewProvider = new ChatViewProvider(context.extensionUri, ollamaService);
+
+	const chatView = vscode.window.registerWebviewViewProvider(
+		'ollot.chatView',
+		chatViewProvider,
+		{
+			webviewOptions: {
+				retainContextWhenHidden: true
 			}
-
-			const input = await vscode.window.showInputBox({
-				prompt: 'Enter your query',
-				placeHolder: 'Type your question here...',
-				ignoreFocusOut: true,
-				validateInput: text => {
-					return text.trim() ? null : 'Query cannot be empty';
-				}
-			});
-
-			if (input) {
-				statusBarService.setProcessing();
-				outputChannel.clear();
-				outputChannel.appendLine('Processing your request...');
-				outputChannel.show(true);
-
-				let fullResponse = '';
-				for await (const chunk of ollamaService.streamResponse(input)) {
-					outputChannel.append(chunk);
-					fullResponse += chunk;
-				}
-
-				statusBarService.setReady();
-			}
-		} catch (error: any) {
-			console.error('Error in command execution:', error);
-			statusBarService.setError('Error');
-			vscode.window.showErrorMessage(`Error: ${error.message}`);
-			outputChannel.appendLine(`\nError occurred: ${error.message}`);
 		}
+	);
+
+	const openChatCommand = vscode.commands.registerCommand('ollot.openChat', () => {
+		vscode.commands.executeCommand('workbench.view.extension.ollot-sidebar');
 	});
-	context.subscriptions.push(disposable);
+
+	context.subscriptions.push(chatView, openChatCommand);
 }
 
 export function deactivate() {

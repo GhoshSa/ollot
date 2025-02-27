@@ -9,15 +9,46 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [ "onCommand:ollot.ollamaChat" ],
+  "activationEvents": [
+    "onCommand:ollot.openChat",
+    "onView:ollot.chatView"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "ollot.ollamaChat",
+        "command": "ollot.openChat",
         "title": "Chat with your ollama model"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ollot-sidebar",
+          "title": "Ollot",
+          "icon": "media/chat.svg"
+        }
+      ]
+    },
+    "views": {
+      "ollot-sidebar": [
+        {
+          "type": "webview",
+          "id": "ollot.chatView",
+          "name": "Chat",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "ollot.openChat",
+          "when": "view == ollot.chatView",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -40,5 +71,9 @@
   },
   "dependencies": {
     "axios": "^1.7.9"
-  }
+  },
+  "files": [
+    "out/**/*",
+    "media/**/*"
+  ]
 }
