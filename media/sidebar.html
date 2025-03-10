@@ -8,9 +8,24 @@
 </head>
 <body>
     <div id="messages"></div>
-    <div id="input-container">
-        <input type="text" id="messageInput" placeholder="Type your message...">
-        <button id="sendButton">Send</button>
+
+    <div class="input-container">
+        <div class="input-wrapper">
+            <input id="messageInput" rows="1" placeholder="Ask your Ollama model..."></input>
+            <button id="sendButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m22 2-7 20-4-9-9-4 20-7z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="model-selector">
+            <div class="model-dropdown">
+                Stable-code
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                    <path d="M12 15l-5-5 1.41-1.41L12 12.17l3.59-3.58L17 10z" fill="currentColor"/>
+                </svg>
+            </div>
+        </div>
     </div>
     <script src="#{scriptUri}"></script>
 </body>
