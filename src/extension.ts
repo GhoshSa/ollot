@@ -1,13 +1,8 @@
 import * as vscode from 'vscode';
-import { StatusBarService } from './functions/statusbar';
 import { OllamaService } from './ollama/ollama';
 import { ChatViewProvider } from './functions/chatViewProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
-	const statusBarService = StatusBarService.getInstance();
-	statusBarService.initialize(context);
-	statusBarService.setReady();
-
 	const ollamaService = OllamaService.getInstance();
 	const chatViewProvider = new ChatViewProvider(context.extensionUri, ollamaService);
 
@@ -28,6 +23,4 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(chatView, openChatCommand);
 }
 
-export function deactivate() {
-	StatusBarService.getInstance().dispose();
-}
+export function deactivate() {}

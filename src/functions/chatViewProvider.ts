@@ -30,7 +30,6 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         });
 
         webviewView.title = 'Ollama Chat';
-        webviewView.description = 'Chat with your Ollama model';
     }
 
     private async handleMessage(message: string) {
@@ -53,7 +52,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                 });
             }
 
-            this._view?.webview.postMessage({ 
+            this._view?.webview.postMessage({
                 type: 'response', 
                 content: response,
                 done: true
@@ -69,11 +68,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlWebview(): string {
-        const htmlPath = path.join(this._extensionUri.fsPath, 'media', 'sidebar.html');
+        const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'UI', 'sidebar.html');
         let html = fs.readFileSync(htmlPath, 'utf8');
 
-        const scriptPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'media', 'script.js');
-        const stylePathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'media', 'style.css');
+        const scriptPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'src', 'UI', 'script.js');
+        const stylePathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'src', 'UI', 'style.css');
         
         const scriptUri = this._view?.webview.asWebviewUri(scriptPathOnDisk);
         const styleUri = this._view?.webview.asWebviewUri(stylePathOnDisk);

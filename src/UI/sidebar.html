@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollot</title>
+    <link rel="stylesheet" href="#{styleUri}">
+</head>
+<body>
+    <div class="chat-container">
+        <div id="messages">
+            <!-- Messages will be added here dynamically -->
+        </div>
+        
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea id="user-input" placeholder="Ask your ollama model..." rows="1"></textarea>
+
+                <div class="gradient-top" id="gradient-top"></div>
+                <div class="gradient-bottom" id="gradient-bottom"></div>
+                
+                <div class="controls">
+                    <button id="send-button" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                    <button id="cancel-button" class="hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="model-selector">
+                <div class="model-dropdown" id="model-dropdown">
+                    <span id="current-model">stable-code</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="dropdown-arrow">
+                        <path d="M12 15l-5-5 1.41-1.41L12 12.17l3.59-3.58L17 10z" fill="currentColor" />
+                    </svg>
+                    
+                    <div class="models-list" id="models-list">
+                        <div class="model-option" data-model="stable-code">stable-code</div>
+                        <div class="model-option" data-model="llama3">llama3</div>
+                        <div class="model-option" data-model="mistral">mistral</div>
+                        <div class="model-option" data-model="codellama">codellama</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="#{scriptUri}"></script>
+</body>
+</html>
