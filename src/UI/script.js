@@ -44,24 +44,6 @@ function setProcessing(processing) {
     }
 }
 
-function handleScroll() {
-    if (textarea.scrollTop > 10) {
-        gradientTop.style.opacity = '1';
-    } else {
-        gradientTop.style.opacity = '0';
-    }
-
-    if (textarea.scrollHeight - textarea.scrollTop - textarea.clientHeight > 10) {
-        gradientBottom.style.opacity = '1';
-    } else {
-        gradientBottom.style.opacity = '0';
-    }
-}
-
-handleScroll();
-
-textarea.addEventListener('scroll', handleScroll);
-
 // Event listener for send button click
 sendButton.addEventListener('click', sendMessage);
 
@@ -90,7 +72,6 @@ function sendMessage() {
     vscode.postMessage({
         type: 'sendMessage',
         message: textarea.value.trim(),
-        model: currentModel
     });
 
     // Clear textarea and scroll to bottom
@@ -104,15 +85,15 @@ cancelButton.addEventListener('click', () => {
     vscode.postMessage({
         type: 'cancelRequest'
     });
-    
+
     // Find the last assistant message and update it
     const assistantMessages = document.querySelectorAll('.message.assistant');
     const lastMessage = assistantMessages[assistantMessages.length - 1];
-    
+
     if (lastMessage && lastMessage.querySelector('.typing-indicator')) {
         lastMessage.innerHTML = "<em>Request cancelled by user.</em>";
     }
-    
+
     setProcessing(false);
 });
 
@@ -150,8 +131,60 @@ document.querySelectorAll('.model-option').forEach(option => {
 
 // Function to format code blocks in messages
 function formatCodeBlock(content) {
-    // This would implement code block formatting with syntax highlighting
-    // For now, we'll use a simple implementation
+    if (!content.includes('```') || !content.includes('``')) {
+        return content; // Return original content if no code blocks
+    }
+
+    // Regex for code blocks
+    const codeBlockRegex = /```([a-zA-Z0-9_+-]*)?\n([\s\S]*?)```/g;
+
+    // Replace each code block with formatted HTML code
+    content = content.replace(codeBlockRegex, (_, language, code) => {
+        // Create a label for the code language
+        const lang = language ? language.trim() : '';
+        const langLabel = lang ? `<span class="code-lang">${lang}</span>` : '';
+        
+        // Sanitize code to prevent HTML injection
+        const sanitizedCode = code
+            .trim()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        // Return formatted code block with copy button
+        return `
+            <div class="code-block">
+                <div class="code-block-header">
+                    ${langLabel}
+                    <button class="copy-button" title="Copy code">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+                <pre><code class="language-${lang}">${sanitizedCode}</code></pre>
+            </div>
+        `;
+    });
+
+    // Regex for inline codes
+    const inlineCodeRegex = /`([^`]+)`/g;
+    content = content.replace(inlineCodeRegex, (_, code) => {
+        // Sanitize code to prevent HTML injection
+        const sanitizedCode = code
+            .trim()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        return `<code class="inline-code">${sanitizedCode}</code>`;
+    });
+
     return content;
 }
 
@@ -162,10 +195,15 @@ function handleCopy(e) {
         const code = codeBlock.querySelector('code').textContent;
         navigator.clipboard.writeText(code).then(() => {
             const button = e.target.closest('.copy-button');
-            const originalText = button.textContent;
-            button.textContent = 'Copied!';
+            const originalContent = button.innerHTML;
+
+            button.classList.add('copied');
+
+            button.innerHTML = `
+                <span>Copied!</span>`;
             setTimeout(() => {
-                button.textContent = originalText;
+                button.innerHTML = originalContent;
+                button.classList.remove('copied');
             }, 2000);
         });
     }
@@ -176,9 +214,12 @@ function initialize() {
     // Handle messages from the extension
     window.addEventListener('message', event => {
         const message = event.data;
-        
+
         switch (message.type) {
             case 'response':
+                handleResponse(message);
+                break;
+            case 'responseCancelled':
                 handleResponse(message);
                 break;
             case 'error':
@@ -192,31 +233,37 @@ function initialize() {
 function handleResponse(message) {
     const assistantMessages = document.querySelectorAll('.message.assistant');
     const lastMessage = assistantMessages[assistantMessages.length - 1];
-    
+
     if (lastMessage) {
         // Remove typing indicator if present
         const indicator = lastMessage.querySelector('.typing-indicator');
         if (indicator) {
             lastMessage.removeChild(indicator);
         }
-        
+
         // If this is a streaming response
         if (!message.done) {
             lastMessage.innerHTML += message.content;
-        } 
+        }
         // If this is the final response chunk
         else if (message.done) {
-            lastMessage.innerHTML = formatCodeBlock(message.content);
-            
-            // Add copy buttons to code blocks
-            const copyButtons = lastMessage.querySelectorAll('.copy-button');
-            copyButtons.forEach(button => {
-                button.addEventListener('click', handleCopy);
-            });
-            
+            if (message.type === 'responseCancelled') {
+                // Keep the existing code
+                const formattedContent = formatCodeBlock(message.content);
+                lastMessage.innerHTML = formattedContent;
+            } else {
+                lastMessage.innerHTML = formatCodeBlock(message.content);
+
+                // Add copy buttons to code blocks
+                const copyButtons = lastMessage.querySelectorAll('.copy-button');
+                copyButtons.forEach(button => {
+                    button.addEventListener('click', handleCopy);
+                });
+            }
+
             setProcessing(false);
         }
-        
+
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 }
@@ -225,7 +272,7 @@ function handleResponse(message) {
 function handleError(message) {
     const assistantMessages = document.querySelectorAll('.message.assistant');
     const lastMessage = assistantMessages[assistantMessages.length - 1];
-    
+
     if (lastMessage) {
         lastMessage.innerHTML = `<div class="error-message">Error: ${message.content}</div>`;
         setProcessing(false);

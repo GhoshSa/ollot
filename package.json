@@ -14,12 +14,6 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "title": "chat with your ollama model",
-        "command": "ollot.openChat"
-      }
-    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -39,6 +33,13 @@
         }
       ]
     },
+    "commands": [
+      {
+        "command": "ollot.openChat",
+        "title": "Open Chat",
+        "category": "Ollot"
+      }
+    ],
     "menus": {
       "view/title": [
         {

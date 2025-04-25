@@ -1,14 +1,17 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { OllamaService } from '../ollama/ollama';
 
 export class ChatViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'ollot.chatView';
     private _view?: vscode.WebviewView;
+    private _activeRequest?: AbortController;
+    private _isCancelled = false;
 
     constructor (
         private readonly _extensionUri: vscode.Uri,
-        private readonly _ollamaService: any
+        private readonly _ollamaService: OllamaService
     ) {}
 
     resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext, _token: vscode.CancellationToken) {
@@ -26,6 +29,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                 case 'sendMessage':
                     await this.handleMessage(data.message);
                     break;
+                case 'cancelRequest':
+                    this.cancelActiveRequest();
+                    break;
             }
         });
 
@@ -33,37 +39,90 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
 
     private async handleMessage(message: string) {
+        this._isCancelled = false;
+
         try {
+            this._activeRequest = new AbortController();
+            const signal = this._activeRequest.signal;
+
             if (!await this._ollamaService.checkAvailability()) {
-                this._view?.webview.postMessage({ 
+                this._view?.webview.postMessage({
                     type: 'error', 
                     content: 'Ollama service is not available' 
                 });
                 return;
             }
 
-            let response = '';
-            for await (const chunk of this._ollamaService.streamResponse(message)) {
-                response += chunk;
-                this._view?.webview.postMessage({ 
-                    type: 'response', 
-                    content: chunk,
-                    done: false
+            if (this._isCancelled || signal.aborted) {
+                this._view?.webview.postMessage({
+                    type: 'responseCancelled',
+                    content: '',
+                    done: true
                 });
+                return;
             }
 
-            this._view?.webview.postMessage({
-                type: 'response', 
-                content: response,
-                done: true
-            });
+            let response = '';
+            try {
+                for await (const chunk of this._ollamaService.streamResponse(message, signal)) {
+                    if (this._isCancelled || signal.aborted) {
+                        throw new Error('Request aborted');
+                    }
+
+                    response += chunk;
+                    this._view?.webview.postMessage({ 
+                        type: 'response', 
+                        content: chunk,
+                        done: false
+                    });
+                }
+    
+                if (!signal.aborted) {
+                    this._view?.webview.postMessage({
+                        type: 'response', 
+                        content: response,
+                        done: true
+                    });
+                }
+            } catch (error: any) {
+                if (error.name === 'AbortError' || this._isCancelled) {
+                    this._view?.webview.postMessage({
+                        type: 'responseCancelled',
+                        content: response,
+                        done: true
+                    });
+                    // this._isCancelled = false;
+                    return;
+                }
+                throw error;
+            } finally {
+                this._activeRequest = undefined;
+                // this._isCancelled = false;
+            }
 
         } catch (error: any) {
-            console.error('Error in handleMessage:', error);
-            this._view?.webview.postMessage({ 
-                type: 'error', 
-                content: error.message
+            if (!this._isCancelled) {
+                this._view?.webview.postMessage({ 
+                    type: 'error', 
+                    content: error.message
+                });
+            }
+        }
+    }
+
+    private cancelActiveRequest() {
+        this._isCancelled = true;
+
+        if (this._activeRequest) {
+            this._activeRequest.abort();
+            this._activeRequest = undefined;
+        } else {
+            this._view?.webview.postMessage({
+                type: 'responseCancelled',
+                content: '',
+                done: true
             });
+            // this._isCancelled = false;
         }
     }
 

@@ -24,34 +24,31 @@ export class OllamaService {
         }
     }
 
-    public async* streamResponse(input: string): AsyncGenerator<string> {
-        const response = await fetch(OLLAMA_API_URL, {
-            method: 'POST',
+    public async* streamResponse(input: string, signal?: AbortSignal): AsyncGenerator<string> {
+        const response = await axios.post(OLLAMA_API_URL, {
+            model: MODEL_NAME,
+            prompt: input,
+            stream: true
+        }, {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                model: MODEL_NAME,
-                prompt: input,
-                stream: true
-            })
+            responseType: 'stream',
+            signal
         });
 
-        if (!response.ok || !response.body) {
+        if (!response.data) {
             throw new Error('Failed to get response from Ollama.');
         }
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
         try {
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) { break; }
+            for await (const chunk of response.data) {
+                if (signal?.aborted) {
+                    throw new Error('Request cancelled');
+                }
 
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n').filter(line => line.trim());
-
+                const lines = chunk.toString().split('\n').filter((line: string) => line.trim());
+                
                 for (const line of lines) {
                     try {
                         const jsonResponse = JSON.parse(line);
@@ -63,8 +60,8 @@ export class OllamaService {
                     }
                 }
             }
-        } finally {
-            reader.releaseLock();
+        } catch (error) {
+            throw new Error(`Stream error: ${error}`);
         }
     }
 }
