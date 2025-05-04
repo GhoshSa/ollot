@@ -1,5 +1,5 @@
 import axios from "axios";
-import { MODEL_NAME, OLLAMA_API_URL, OLLAMA_AVAILABILITY } from "../constants/constant";
+import { OLLAMA_API_URL, OLLAMA_AVAILABILITY, OLLAMA_MODELS_URL } from "../constants/constant";
 
 export class OllamaService {
     private static instance: OllamaService | undefined;
@@ -13,7 +13,7 @@ export class OllamaService {
         return OllamaService.instance;
     }
 
-    async checkAvailability(): Promise<boolean> {
+    public async checkAvailability(): Promise<boolean> {
         try {
             const response = await axios.get(OLLAMA_AVAILABILITY, {
                 timeout: 2000
@@ -24,9 +24,25 @@ export class OllamaService {
         }
     }
 
-    public async* streamResponse(input: string, signal?: AbortSignal): AsyncGenerator<string> {
+    public async getModels(): Promise<string[]> {
+        try {
+            const response = await axios.get(OLLAMA_MODELS_URL, {
+                timeout: 20000
+            });
+
+            if (response.status === 200 && response.data && Array.isArray(response.data.models)) {
+                return response.data.models.map((model: any) => model.name);
+            }
+
+            return ['stable-code'];
+        } catch (error) {
+            return ['stable-code'];
+        }
+    }
+
+    public async* streamResponse(input: string, model: string, signal?: AbortSignal): AsyncGenerator<string> {
         const response = await axios.post(OLLAMA_API_URL, {
-            model: MODEL_NAME,
+            model: model,
             prompt: input,
             stream: true
         }, {

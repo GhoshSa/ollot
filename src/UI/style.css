@@ -180,6 +180,37 @@ button:disabled {
     background-color: var(--button-hover-background);
 }
 
+.model-notification {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-button-background);
+    color: var(--vscode-editor-foreground);
+    padding: 8px 16px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    font-size: 12px;
+    transition: opacity 0.5s ease;
+}
+
+.model-notification.fade-out {
+    opacity: 0;
+}
+
+.model-loading {
+    opacity: 0.7;
+    font-style: italic;
+    pointer-events: none;
+}
+
+.no-models {
+    color: var(--vscode-errorForeground);
+    font-style: italic;
+}
+
 pre {
     background-color: var(--input-background);
     border-radius: 4px;
@@ -230,7 +261,6 @@ code {
     opacity: 1;
 }
 
-/* Typing indicator */
 .typing-indicator {
     display: flex;
     align-items: center;
@@ -264,7 +294,6 @@ code {
     }
 }
 
-/* Error message styling */
 .error-message {
     color: var(--vscode-errorForeground, #f88070);
     padding: 5px;

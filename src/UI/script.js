@@ -1,7 +1,5 @@
 // Get references to DOM elements
 const textarea = document.getElementById('user-input');
-const gradientTop = document.getElementById('gradient-top');
-const gradientBottom = document.getElementById('gradient-bottom');
 const sendButton = document.getElementById('send-button');
 const cancelButton = document.getElementById('cancel-button');
 const modelDropdown = document.getElementById('model-dropdown');
@@ -11,7 +9,7 @@ const messagesContainer = document.getElementById('messages');
 
 // Setup variables
 let isProcessing = false;
-let currentModel = 'stable-code';
+// let currentModel = 'stable-code';
 const vscode = acquireVsCodeApi();
 
 // Initialize the chat
@@ -124,8 +122,29 @@ document.querySelectorAll('.model-option').forEach(option => {
         e.stopPropagation();
         currentModel = option.getAttribute('data-model') || 'stable-code';
         currentModelEl.textContent = currentModel;
+
+        // Send model change to extension
+        vscode.postMessage({
+            type: 'modelChanged',
+            model: currentModel
+        });
+
         modelsList.classList.remove('show');
         modelDropdown.querySelector('.dropdown-arrow').classList.remove('rotate');
+
+        // Add visual feedback for model change
+        const modelChangeNotification = document.createElement('div');
+        modelChangeNotification.classList.add('model-notification');
+        modelChangeNotification.textContent = `Model changed to ${currentModel}`;
+        document.body.appendChild(modelChangeNotification);
+
+        // Remove notification after 2 seconds
+        setTimeout(() => {
+            modelChangeNotification.classList.add('fade-out');
+            setTimeout(() => {
+                document.body.removeChild(modelChangeNotification);
+            }, 500);
+        }, 2000);
     });
 });
 
@@ -225,7 +244,76 @@ function initialize() {
             case 'error':
                 handleError(message);
                 break;
+            case 'availableModels':
+                handleModels(message);
+                break;
         }
+    });
+
+    // Request available models
+    vscode.postMessage({
+        type: 'getModels'
+    });
+}
+
+// Function to handle available models
+function handleModels(message) {
+    const models = message.models;
+    const currentModel = message.currentModel;
+
+    // Clear the existing model options
+    modelsList.innerHTML = '';
+
+    // For no model
+    if (!models || models.length === 0) {
+        const noModelOptions = document.createElement('div');
+        noModelOptions.classList.add('model-option', 'no-models');
+        noModelOptions.textContent = 'No models found';
+        modelsList.appendChild(noModelOptions);
+        return;
+    }
+
+    // Update the current model display
+    currentModelEl.textContent = currentModel;
+    window.currentModel = currentModel;
+
+    // Add model options to dropdown
+    models.forEach(model => {
+        const option = document.createElement('div');
+        option.classList.add('model-option');
+        option.setAttribute('data-model', model);
+        option.textContent = model;
+        modelsList.appendChild(option);
+
+        // Add click event listener
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.currentModel = model;
+            currentModelEl.textContent = model;
+
+            // Send model change to extension
+            vscode.postMessage({
+                type: 'modelChanged',
+                model: model
+            });
+
+            modelsList.classList.remove('show');
+            modelDropdown.querySelector('.dropdown-arrow').classList.remove('rotate');
+
+            // Add visual feedback for model change
+            const modelNotification = document.createElement('div');
+            modelNotification.classList.add('model-notification');
+            modelNotification.textContent = `Model changed to ${model}`;
+            document.body.appendChild(modelNotification);
+            
+            // Remove notification after 2 seconds
+            setTimeout(() => {
+                modelNotification.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(modelNotification);
+                }, 500);
+            }, 2000);
+        });
     });
 }
 
