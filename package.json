@@ -1,16 +1,23 @@
 {
   "name": "ollot",
   "displayName": "Ollot",
+  "publisher": "Sayantan710",
   "description": "",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GhoshSa/ollot.git"
+  },
+  "license": "MIT",
   "engines": {
     "vscode": "^1.97.0"
   },
+  "icon": "icon/icon.png",
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    
+    "onView:ollot-sidebar"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -19,7 +26,7 @@
         {
           "id": "ollot-sidebar",
           "title": "Ollot",
-          "icon": "src/icon/chat.svg"
+          "icon": "icon/icon.png"
         }
       ]
     },
@@ -27,6 +34,7 @@
       "ollot-sidebar": [
         {
           "type": "webview",
+          "icon": "icon/icon.png",
           "id": "ollot.chatView",
           "name": "Chat",
           "visibility": "visible"
@@ -73,6 +81,7 @@
     "axios": "^1.7.9"
   },
   "files": [
-    "out/**/*"
+    "out/**/*",
+    "icon/*"
   ]
 }
