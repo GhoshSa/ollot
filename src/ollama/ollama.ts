@@ -64,7 +64,6 @@ export class OllamaService {
                 }
 
                 const lines = chunk.toString().split('\n').filter((line: string) => line.trim());
-                
                 for (const line of lines) {
                     try {
                         const jsonResponse = JSON.parse(line);

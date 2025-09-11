@@ -2,7 +2,7 @@
   "name": "ollot",
   "displayName": "Ollot",
   "publisher": "Sayantan710",
-  "description": "",
+  "description": "Ollot brings AI assistance directly into VS Code, powered by your local Ollama models. Get instant code suggestions, explanations, and problem-solving without leaving your editor.",
   "version": "0.0.1",
   "repository": {
     "type": "git",
@@ -14,6 +14,7 @@
   },
   "icon": "icon/icon.png",
   "categories": [
+    "Chat",
     "Other"
   ],
   "activationEvents": [
@@ -26,7 +27,7 @@
         {
           "id": "ollot-sidebar",
           "title": "Ollot",
-          "icon": "icon/icon.png"
+          "icon": "icon/icon.svg"
         }
       ]
     },
@@ -34,7 +35,7 @@
       "ollot-sidebar": [
         {
           "type": "webview",
-          "icon": "icon/icon.png",
+          "icon": "icon/icon.svg",
           "id": "ollot.chatView",
           "name": "Chat",
           "visibility": "visible"
