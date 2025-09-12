@@ -27,7 +27,7 @@
         {
           "id": "ollot-sidebar",
           "title": "Ollot",
-          "icon": "icon/icon.svg"
+          "icon": "icon/icon_s.svg"
         }
       ]
     },
@@ -35,7 +35,7 @@
       "ollot-sidebar": [
         {
           "type": "webview",
-          "icon": "icon/icon.svg",
+          "icon": "icon/icon_s.svg",
           "id": "ollot.chatView",
           "name": "Chat",
           "visibility": "visible"
