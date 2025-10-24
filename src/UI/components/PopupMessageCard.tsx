@@ -1,0 +1,46 @@
+import React from 'react'
+import { motion } from 'framer-motion'
+
+interface PopupMessageCardProps {
+    title: string
+    message: string
+    actionLabel?: string
+    onAction?: () => void
+    onClose?: () => void
+    type?: 'error' | 'warning' | 'info'
+}
+
+const PopupMessageCard = ({ title, message, actionLabel, onAction, onClose, type = 'info' }: PopupMessageCardProps) => {
+    const colors = {
+        error: 'border-red-500/30 text-red-400',
+        warning: 'border-yellow-500/30 text-yellow-400',
+        info: 'border-blue-500/30 text-blue-400'
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+        >
+            <div className={`rounded-xl backdrop-blur-lg bg-[var(--vscode-editor-background)]/70 border ${colors[type]} max-w-[250px]`}>
+                <div className="p-2.5">
+                    <h1 className='text-sm font-semibold text-center'>{title}</h1>
+                    <p className='text-xs text-center leading-relaxed'>{message}</p>
+                    <div>
+                        {actionLabel && (
+                            <button
+                                onClick={onAction}
+                            >
+                                {actionLabel}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    )
+}
+
+export default PopupMessageCard

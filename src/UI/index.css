@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+:root {
+    --background-color: var(--vscode-editor-background);
+    --text-color: var(--vscode-editor-foreground);
+    --input-background: var(--vscode-input-background);
+    --input-border: var(--vscode-input-border);
+    --button-background: var(--vscode-button-background);
+    --button-foreground: var(--vscode-button-foreground);
+}

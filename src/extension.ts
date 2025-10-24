@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
-import { OllamaService } from './ollama/ollama';
-import { ChatViewProvider } from './functions/chatViewProvider';
+import { OllamaService } from './service/ollama';
+import { ChatViewProvider } from './providers/chatViewProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
 	const ollamaService = OllamaService.getInstance();
 	const chatViewProvider = new ChatViewProvider(context.extensionUri, ollamaService);
-
 	const chatView = vscode.window.registerWebviewViewProvider(
-		'ollot.chatView',
+		'ollot.chatview',
 		chatViewProvider,
 		{
 			webviewOptions: {
@@ -15,11 +14,9 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		}
 	);
-
-	const openChatCommand = vscode.commands.registerCommand('ollot.openChat', () => {
+	const openChatCommand = vscode.commands.registerCommand('ollot.openchat', () => {
 		vscode.commands.executeCommand('workbench.view.extension.ollot-sidebar');
 	});
-
 	context.subscriptions.push(chatView, openChatCommand);
 }
 

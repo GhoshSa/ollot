@@ -1,10 +1,25 @@
 import axios from "axios";
-import { OLLAMA_API_URL, OLLAMA_AVAILABILITY, OLLAMA_MODELS_URL } from "../constants/constant";
+import * as vscode from "vscode";
 
 export class OllamaService {
     private static instance: OllamaService | undefined;
+    private baseUrl: string | null = null;
+    private isValid: boolean = false;
 
-    private constructor() {}
+    private constructor() {
+        const url = vscode.workspace.getConfiguration("ollot").get<string>("ollamaUrl");
+        if (!url || url.trim() === "") {
+            this.isValid = false;
+            return;
+        }
+        try {
+            new URL(url);
+            this.baseUrl = url.replace(/\/+$/, "");
+            this.isValid = true;
+        } catch(e) {
+            this.isValid = false;
+        }
+    }
 
     public static getInstance(): OllamaService {
         if (!OllamaService.instance) {
@@ -13,9 +28,22 @@ export class OllamaService {
         return OllamaService.instance;
     }
 
+    private isConfigured(): boolean {
+        return this.isValid && this.baseUrl !== null;
+    }
+
+    private get modelsUrl(): string {
+        return `${this.baseUrl}/api/tags`;
+    }
+
+    private get generateResponseUrl(): string {
+        return `${this.baseUrl}/api/generate`;
+    }
+
     public async checkAvailability(): Promise<boolean> {
+        if (!this.isConfigured()) {return false;}
         try {
-            const response = await axios.get(OLLAMA_AVAILABILITY, {
+            const response = await axios.get(this.baseUrl!, {
                 timeout: 2000
             });
             return response.status === 200;
@@ -25,23 +53,23 @@ export class OllamaService {
     }
 
     public async getModels(): Promise<string[]> {
+        if (!this.isConfigured()) {return [];}
         try {
-            const response = await axios.get(OLLAMA_MODELS_URL, {
-                timeout: 20000
+            const response = await axios.get(this.modelsUrl, {
+                timeout: 2000
             });
-
             if (response.status === 200 && response.data && Array.isArray(response.data.models)) {
                 return response.data.models.map((model: any) => model.name);
             }
-
-            return ['stable-code'];
+            return [];
         } catch (error) {
-            return ['stable-code'];
+            return [];
         }
     }
 
     public async* streamResponse(input: string, model: string, signal?: AbortSignal): AsyncGenerator<string> {
-        const response = await axios.post(OLLAMA_API_URL, {
+        if (!this.isConfigured()) {throw new Error("Ollama is not configured.");}
+        const response = await axios.post(this.generateResponseUrl, {
             model: model,
             prompt: input,
             stream: true
@@ -52,17 +80,14 @@ export class OllamaService {
             responseType: 'stream',
             signal
         });
-
         if (!response.data) {
             throw new Error('Failed to get response from Ollama.');
         }
-
         try {
             for await (const chunk of response.data) {
                 if (signal?.aborted) {
                     throw new Error('Request cancelled');
                 }
-
                 const lines = chunk.toString().split('\n').filter((line: string) => line.trim());
                 for (const line of lines) {
                     try {

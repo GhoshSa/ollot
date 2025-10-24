@@ -36,7 +36,7 @@
         {
           "type": "webview",
           "icon": "icon/icon_s.svg",
-          "id": "ollot.chatView",
+          "id": "ollot.chatview",
           "name": "Chat",
           "visibility": "visible"
         }
@@ -44,42 +44,62 @@
     },
     "commands": [
       {
-        "command": "ollot.openChat",
+        "command": "ollot.openchat",
         "title": "Open Chat",
         "category": "Ollot"
       }
     ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "ollot.openChat",
-          "when": "view == ollot.chatView",
-          "group": "navigation"
+    "configuration": {
+      "title": "Ollot",
+      "properties": {
+        "ollot.ollamaUrl": {
+          "type": "string",
+          "description": "Base URL for the Ollama server.",
+          "format": "uri"
         }
-      ]
+      }
     }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "build": "tsc -p . && webpack --config webpack.config.js",
+    "compile": "tsc && npm run build"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.13",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
     "@types/vscode": "^1.97.0",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "^8.22.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
+    "autoprefixer": "^10.4.21",
+    "copy-webpack-plugin": "^13.0.1",
+    "css-loader": "^7.1.2",
     "eslint": "^9.19.0",
-    "typescript": "^5.7.3"
+    "postcss": "^8.5.6",
+    "postcss-loader": "^8.2.0",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^4.1.13",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.7.3",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "axios": "^1.7.9"
+    "@emotion/is-prop-valid": "^1.4.0",
+    "axios": "^1.7.9",
+    "framer-motion": "^12.23.22",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-icons": "^5.5.0"
   },
   "files": [
     "out/**/*",
