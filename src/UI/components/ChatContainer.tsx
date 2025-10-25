@@ -2,31 +2,81 @@ import React, { useEffect, useState } from 'react'
 import PopupMessageCard from './PopupMessageCard'
 import { vscode } from '../../utils/vscodeApi'
 
+interface PopupMessageData {
+    content: string
+    type: 'error' | 'warning' | 'info'
+    title?: string
+    actionLabel?: string
+    onAction?: () => void
+}
+
 const ChatContainer = () => {
     const [messages, setMessages] = useState<string[]>([])
-    const [popupMessage, setPopupMessage] = useState<string | null>(null)
+    const [popupMessage, setPopupMessage] = useState<PopupMessageData | null>(null)
     useEffect(() => {
-        vscode.postMessage({type: 'webviewReady'})
         const handler = (event: MessageEvent) => {
             const message = event.data
             switch (message.type) {
                 case 'serviceUnavailable':
-                    setPopupMessage(message.content)
+                    setPopupMessage({
+                        content: message.content,
+                        type: 'error',
+                        title: 'Service Unavailable',
+                        actionLabel: 'Open Settings',
+                        onAction: handleOpenSettings
+                    })
                     break
                 case 'response':
                     setMessages((prev) => [...prev, message.content])
                     break
+                case 'error':
+                    setPopupMessage({
+                        content: message.content,
+                        type: 'error',
+                        title: 'Error'
+                    })
+                    break
+                case 'warning':
+                    setPopupMessage({
+                        content: message.content,
+                        type: 'warning',
+                        title: 'Warning'
+                    })
+                    break
             }
         }
         window.addEventListener('message', handler)
+        vscode.postMessage({type: 'webviewReady'})
         return () => window.removeEventListener('message', handler)
     }, [])
+
+    const handleOpenSettings = () => {
+        vscode.postMessage({
+            type: 'openSettings',
+            setting: 'ollot.ollamaUrl'
+        })
+    }
+
+    useEffect(() => {
+        if (!popupMessage) return
+        const timer = setTimeout(() => {
+            setPopupMessage(null)
+        }, 7000)
+        return () => clearTimeout(timer)
+    }, [popupMessage])
+
     return (
         <div className='h-full'>
             {
                 popupMessage && (
                     <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50'>
-                        <PopupMessageCard title='Service Unavailable' message={popupMessage} actionLabel='Open Settings' onAction={() => vscode.postMessage({ type: 'openSettings', setting: 'ollot.ollamaUrl' })} onClose={() => setPopupMessage(null)} type='error' />
+                        <PopupMessageCard
+                            title={popupMessage.title ?? ''}
+                            message={popupMessage.content}
+                            actionLabel={popupMessage.actionLabel}
+                            onAction={popupMessage.onAction}
+                            type={popupMessage.type}
+                        />
                     </div>
                 )
             }

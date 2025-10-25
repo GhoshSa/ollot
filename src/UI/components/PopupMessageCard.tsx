@@ -6,11 +6,10 @@ interface PopupMessageCardProps {
     message: string
     actionLabel?: string
     onAction?: () => void
-    onClose?: () => void
-    type?: 'error' | 'warning' | 'info'
+    type: 'error' | 'warning' | 'info'
 }
 
-const PopupMessageCard = ({ title, message, actionLabel, onAction, onClose, type = 'info' }: PopupMessageCardProps) => {
+const PopupMessageCard = ({ title, message, actionLabel, onAction, type = 'info' }: PopupMessageCardProps) => {
     const colors = {
         error: 'border-red-500/30 text-red-400',
         warning: 'border-yellow-500/30 text-yellow-400',
@@ -27,17 +26,18 @@ const PopupMessageCard = ({ title, message, actionLabel, onAction, onClose, type
             <div className={`rounded-xl backdrop-blur-lg bg-[var(--vscode-editor-background)]/70 border ${colors[type]} max-w-[250px]`}>
                 <div className="p-2.5">
                     <h1 className='text-sm font-semibold text-center'>{title}</h1>
-                    <p className='text-xs text-center leading-relaxed'>{message}</p>
-                    <div>
-                        {actionLabel && (
-                            <button
-                                onClick={onAction}
-                            >
-                                {actionLabel}
-                            </button>
-                        )}
-                    </div>
+                    <p className='text-xs text-center leading-relaxed opacity-80 mt-1'>{message}</p>
                 </div>
+                {actionLabel && (
+                    <div className="flex justify-center px-2 pb-3">
+                        <button
+                            onClick={onAction}
+                            className={`text-xs font-medium bg-[var(--vscode-button-background)] ${colors[type]} px-3 py-1 rounded-md hover:bg-[var(--vscode-button-hoverBackground)]`}
+                        >
+                            {actionLabel}
+                        </button>
+                    </div>
+                )}
             </div>
         </motion.div>
     )

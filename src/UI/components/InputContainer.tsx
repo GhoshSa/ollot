@@ -8,12 +8,15 @@ const InputContainer = () => {
     const [isProcessing, setIsProcessing] = useState(false)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     useAutoResizeTextarea(textareaRef)
+    
     const handleSend = () => {
         setIsProcessing(true)
     }
+
     const handleAbort = () => {
         setIsProcessing(false)
     }
+
     return (
         <div className="flex p-2 items-center rounded-xl relative bg-[var(--background-color)]/5 backdrop-blur-[2px] border border-[var(--vscode-editor-foreground)]/10 shadow-[0_2px_8px_-1px_var(--vscode-widget-shadow),0_4px_12px_-2px_var(--vscode-widget-shadow),inset_0_1px_0_0_rgba(255,255,255,0.05)]">
             <textarea

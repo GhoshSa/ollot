@@ -28,6 +28,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                 case 'webviewReady':
                     await this.handleWebviewReady();
                     break;
+                case 'openSettings':
+                    await vscode.commands.executeCommand('workbench.action.openSettings', data.setting);
+                    break;
                 case 'sendMessage':
                     await this.handleMessage(data.message);
                     break;
