@@ -7,6 +7,10 @@ export class OllamaService {
     private isValid: boolean = false;
 
     private constructor() {
+        this.loadConfiguration();
+    }
+
+    private loadConfiguration() {
         const url = vscode.workspace.getConfiguration("ollot").get<string>("ollamaUrl");
         if (!url || url.trim() === "") {
             this.isValid = false;
@@ -29,6 +33,7 @@ export class OllamaService {
     }
 
     private isConfigured(): boolean {
+        this.loadConfiguration();
         return this.isValid && this.baseUrl !== null;
     }
 

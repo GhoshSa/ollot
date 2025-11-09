@@ -28,6 +28,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                 case 'webviewReady':
                     await this.handleWebviewReady();
                     break;
+                case 'refreshAvailability':
+                    await this.handleWebviewReady();
+                    break;
                 case 'openSettings':
                     await vscode.commands.executeCommand('workbench.action.openSettings', data.setting);
                     break;
@@ -53,7 +56,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             if (!available) {
                 this._view?.webview.postMessage({
                     type: 'serviceUnavailable',
-                    content: 'Ollama service is unavailable. Please ensure that Ollama is running and URL is correctly configured in user settings'
+                    content: 'Please ensure that Ollama is running and URL is correctly configured in user settings'
                 });
             } else {
                 await this.sendAvailableModels();
