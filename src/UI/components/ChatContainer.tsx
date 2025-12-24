@@ -1,18 +1,24 @@
 import React, { useEffect, useState } from 'react'
-import PopupMessageCard from './PopupMessageCard'
+import PopupMessageCard from './popup/PopupMessageCard'
 import { vscode } from '../../utils/vscodeApi'
 import useOpenSettings from '../hooks/useOpenSettings'
+import ChatMessageList from './chat/ChatMessageList'
 
 interface PopupMessageData {
     content: string
-    type: 'error' | 'warning' | 'info'
+    type: 'error' | 'success'
     title?: string
     actionLabel?: string
     onAction?: () => void
 }
 
+interface ChatMessage {
+    content: string
+    sender: 'user' | 'model'
+}
+
 const ChatContainer = () => {
-    const [messages, setMessages] = useState<string[]>([])
+    const [messages, setMessages] = useState<ChatMessage[]>([])
     const [popupMessage, setPopupMessage] = useState<PopupMessageData | null>(null)
     const openSettings = useOpenSettings()
 
@@ -29,21 +35,30 @@ const ChatContainer = () => {
                         onAction: handleOpenSettings
                     })
                     break
+                case 'ollamaConnected':
+                    setPopupMessage({
+                        content: message.content,
+                        type: 'success',
+                        title: 'Ollama Connected'
+                    })
+                    break
                 case 'response':
-                    setMessages((prev) => [...prev, message.content])
+                    setMessages(prev => {
+                        const last = prev[prev.length - 1]
+                        if (last?.sender === 'model') {
+                            return [
+                                ...prev.slice(0, -1),
+                                {content: last.content + message.content, sender: 'model'}
+                            ]
+                        }
+                        return [...prev, {content: message.content, sender: 'model'}]
+                    })
                     break
                 case 'error':
                     setPopupMessage({
                         content: message.content,
                         type: 'error',
                         title: 'Error'
-                    })
-                    break
-                case 'warning':
-                    setPopupMessage({
-                        content: message.content,
-                        type: 'warning',
-                        title: 'Warning'
                     })
                     break
             }
@@ -89,11 +104,7 @@ const ChatContainer = () => {
                         </p>
                     </div>
                 ) : (
-                    messages.map((message, index) => (
-                        <div key={index}>
-                            {message}
-                        </div>
-                    ))
+                    <ChatMessageList messsages={messages}/>
                 )
             }
         </div>

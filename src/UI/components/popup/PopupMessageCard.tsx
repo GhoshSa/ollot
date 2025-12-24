@@ -6,14 +6,13 @@ interface PopupMessageCardProps {
     message: string
     actionLabel?: string
     onAction?: () => void
-    type: 'error' | 'warning' | 'info'
+    type: 'error' | 'success'
 }
 
-const PopupMessageCard = ({ title, message, actionLabel, onAction, type = 'info' }: PopupMessageCardProps) => {
+const PopupMessageCard = ({ title, message, actionLabel, onAction, type = 'success' }: PopupMessageCardProps) => {
     const colors = {
         error: 'border-red-500/30 text-red-400',
-        warning: 'border-yellow-500/30 text-yellow-400',
-        info: 'border-blue-500/30 text-blue-400'
+        success: 'border-green-500/30 text-green-400'
     }
 
     return (

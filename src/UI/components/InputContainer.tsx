@@ -3,6 +3,7 @@ import { HiMenu, HiOutlineArrowCircleUp, HiOutlineStop, HiX } from 'react-icons/
 import useAutoResizeTextarea from '../hooks/useAutoResizeTextarea'
 import { AnimatePresence, motion } from 'framer-motion'
 import MenuBar from './MenuBar'
+import { vscode } from '../../utils/vscodeApi'
 
 const InputContainer = () => {
     const [text, setText] = useState('')
@@ -11,9 +12,14 @@ const InputContainer = () => {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     useAutoResizeTextarea(textareaRef)
 
-    const handleSend = () => setIsProcessing(true)
-    const handleAbort = () => setIsProcessing(false)
-    const handleRefresh = () => console.log('Refresh clicked!')
+    const handleSend = () => {
+        setIsProcessing(true)
+        vscode.postMessage({ type: 'sendMessage', message: text})
+    }
+    const handleAbort = () => {
+        vscode.postMessage({ type: 'cancelRequest' })
+        setIsProcessing(false)
+    }
 
     return (
         <div className="flex items-end gap-2">
@@ -73,7 +79,10 @@ const InputContainer = () => {
                             {!isProcessing ? (
                                 <HiOutlineArrowCircleUp
                                     className="w-5 h-5 cursor-pointer hover:text-[var(--vscode-button-hoverBackground)]"
-                                    onClick={handleSend}
+                                    onClick={() => {
+                                        setText('')
+                                        handleSend()
+                                    }}
                                 />
                             ) : (
                                 <HiOutlineStop

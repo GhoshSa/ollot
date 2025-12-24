@@ -52,16 +52,6 @@ Initial release of Ollot.
 * Supports model selection.
 * Includes streaming responses and code formatting.
 
-## Contributing
-
-We welcome contributions of all kinds!
-
 ## License
 
 This extension is released under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Acknowledgements
-
-This extension uses the following libraries:
-
-* [axios](https://axios-http.com/): For making HTTP requests to the Ollama server.

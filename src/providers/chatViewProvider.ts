@@ -8,7 +8,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     private _view?: vscode.WebviewView;
     private _activeRequest?: AbortController;
     private _isCancelled = false;
-    private _currentModel = '';
+    private _currentModel = "";
 
     constructor (
         private readonly _extensionUri: vscode.Uri,
@@ -41,7 +41,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                     this.cancelActiveRequest();
                     break;
                 case 'modelChanged':
-                    this._currentModel = data.model;
+                    // this._currentModel = data.model;
+                    await this.handleModelChange(data.model);
                     break;
                 case 'getModels':
                     await this.sendAvailableModels();
@@ -59,16 +60,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                     content: 'Please ensure that Ollama is running and URL is correctly configured in user settings'
                 });
             } else {
-                await this.sendAvailableModels();
+                this._view?.webview.postMessage({
+                    type: 'ollamaConnected',
+                    content: 'Connection established with your ollama service.'
+                });
             }
-        } catch (error: any) {
-            const errorMessage = error.message || 'Failed to connect to Ollama service';
-            this._view?.webview.postMessage({
-                type: 'error',
-                content: errorMessage
-            });
-            vscode.window.showErrorMessage(errorMessage, 'Open Settings');
-        }
+        } catch (error: any) {}
     }
 
     private async handleMessage(message: string) {
@@ -82,7 +79,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             if (!await this._ollamaService.checkAvailability()) {
                 this._view?.webview.postMessage({
                     type: 'error', 
-                    content: 'Ollama service is not available' 
+                    content: 'Ollama service is not available'
                 });
                 return;
             }
@@ -167,21 +164,33 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         try {
             const models = await this._ollamaService.getModels();
             if (!models || models.length === 0) {
-                throw new Error('No models available');
+                this._view?.webview.postMessage({
+                    type: 'noAvailableModels',
+                    content: 'Please download an Ollama model.'
+                });
+            } else {
+                this._currentModel = models[0];
+                this._view?.webview.postMessage({
+                    type: 'availableModels',
+                    models: models,
+                    currentModel: this._currentModel
+                });
             }
-            this._currentModel = models[0];
+        } catch (error: any) {}
+    }
+
+    private async handleModelChange(model: string) {
+        try {
+            this._currentModel = model;
             this._view?.webview.postMessage({
-                type: 'availableModels',
-                models: models,
-                currentModel: this._currentModel
+                type: 'modelChangedSuccessfully',
+                content: 'Model changed successfully.'
             });
-        } catch (error: any) {
-            const errorMessage = error.message || 'Error fetching models';
+        } catch (error) {
             this._view?.webview.postMessage({
-                type: 'error',
-                content: errorMessage
+                type: 'failedToChangedModel',
+                content: 'Failed to change model.'
             });
-            console.error('Error fetching models:', error);
         }
     }
 }
