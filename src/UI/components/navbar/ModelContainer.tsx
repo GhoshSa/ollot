@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import React, { useEffect, useState } from 'react'
-import { vscode } from '../../utils/vscodeApi'
+import { vscode } from '../../../utils/vscodeApi'
 
 const ModelContainer = () => {
     const [models, setModels] = useState<string[]>([])

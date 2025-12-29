@@ -41,11 +41,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                     this.cancelActiveRequest();
                     break;
                 case 'modelChanged':
-                    // this._currentModel = data.model;
                     await this.handleModelChange(data.model);
                     break;
                 case 'getModels':
                     await this.sendAvailableModels();
+                    break;
+                default:
                     break;
             }
         });
@@ -64,6 +65,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                     type: 'ollamaConnected',
                     content: 'Connection established with your ollama service.'
                 });
+                this.sendAvailableModels();
             }
         } catch (error: any) {}
     }
@@ -107,9 +109,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
                 }
                 if (!signal.aborted) {
                     this._view?.webview.postMessage({
-                        type: 'response', 
-                        content: response,
-                        done: true
+                        type: 'responseComplete'
                     });
                 }
             } catch (error: any) {
