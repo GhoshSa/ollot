@@ -8,7 +8,6 @@ This extension provides seamless integration with the Ollama AI model server wit
 * **Model Selection:** Easily switch between available Ollama models using a dropdown menu in the chat view.
 * **Streaming Responses:** Experience real-time interaction with Ollama as the extension streams responses as they are generated.
 * **Code Formatting:** The extension automatically formats code blocks in the responses for improved readability.
-* **Copy Code:** Quickly copy code snippets from the chat using convenient copy buttons.
 
 ## Requirements
 
@@ -24,7 +23,7 @@ This extension provides seamless integration with the Ollama AI model server wit
 
 ## Usage
 
-1.  After installation, an "Ollot" icon appears in the Activity Bar.
+1.  After installation, "Ollot" icon appears in the Activity Bar.
 2.  Click the icon to open the Ollot sidebar.
 3.  The Chat view will be displayed.
 4.  Type your prompt in the input area and press Enter or click the send button.
@@ -33,14 +32,9 @@ This extension provides seamless integration with the Ollama AI model server wit
 
 ## Commands
 
-The extension contributes the following commands:
+If you dont see the icon the use the following command in the Command Palette:
 
 * `Ollot: Open Chat` : Opens the Ollot chat view.
-
-## Known Issues
-
-* Chat view may not be scrollable while the response is streaming.
-* May not look good with some themes.
 
 ## Release Notes
 
