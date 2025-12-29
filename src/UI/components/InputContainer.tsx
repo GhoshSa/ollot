@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { HiOutlineArrowCircleUp, HiOutlineStop, HiX } from 'react-icons/hi'
+import { HiOutlineArrowCircleUp, HiOutlineStop } from 'react-icons/hi'
 import useAutoResizeTextarea from '../hooks/useAutoResizeTextarea'
 import { AnimatePresence, motion } from 'framer-motion'
 
